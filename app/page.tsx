@@ -1,50 +1,112 @@
 'use client'
-import { useState } from 'react'
+import React from 'react'
+import { useEffect, useState } from 'react'
 
-export default function Home() {
+interface Todo {
+  id: number,
+  content: string,
+  done: boolean,
+  userId: number
+}
+
+function page() {
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [content, setContent] = useState('')
+
+    function handleChange(e:any) {
+      setContent(e.target.value)
+    }
+
+    async function createTodo() {
+      const response = await fetch('/api/todo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({content})
+      })
+      const newTodo = await response.json()
+      setTodos([...todos, newTodo])
+      setContent('')
+    }
+
+    useEffect(() => {
+      async function fetchData() {
+
+        const response = await fetch('/api/todo')
+
+        if (!response.ok) {
+          //redirect to login page
+          console.log('REDIRECT TO LOGIN')
+          document.location.href = 'http://localhost:3000/login'
+          return
+        }
+
+        const todos = await response.json()
+        setTodos(todos)
+        
+        console.log(todos)
+      }
+      fetchData()
+
+    }, [])
+
+    useEffect(() => {
+      console.log(todos)
+    }, [todos])
+
+    function handleEdit() {
+      return
+    }
+
+    function handleDelete(e:any) {
+      const id = e.target.id
+      const response = fetch('/api/todo/?id=' + id, {
+        method: 'DELETE'
+      })
+      setTodos(todos.filter(todo => todo.id != id))
+    }
+
+    async function handleCheck(e:any) {
+      const taskId = e.target.id
+      const response = fetch('/api/todo/', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({done: e.target.checked, id: taskId})
+      })
+
+      const updatedTodos = todos.map((todo) => {
+        if (todo.id === parseInt(taskId)) {
+          return { ...todo, done: e.target.checked };
+        }
+        return todo;
+      });
+      setTodos(updatedTodos);
+    }
+
   return (
-    <main className="">
-        <div className="hero min-h-screen bg-base-200">
-  <div className="hero-content flex-col lg:flex-row-reverse">
-    <div className="text-center lg:text-left">
-      <h1 className="text-5xl font-bold">Login now!</h1>
-      <p className="py-6">Login to access the list of your to-dos</p>
+    <div className='flex flex-col p-2'>
+      <h1>Todo List</h1>
+      <input type='text' value={content} onChange={handleChange} className='w-96'></input>
+      <button onClick={createTodo}>Create</button>
+      <input type='checkbox'/>
+    
+      <div className='p-2'>
+        {todos.map((todo: Todo) => (
+          <div key={todo.id} className='flex flex-row justify-evenly border rounded w-96 p-2 '>
+            <input type="checkbox" checked={todo.done} id={JSON.stringify(todo.id)} onChange={handleCheck} /> 
+            <p>{todo.content}</p>
+            <div className='btn' onClick={handleEdit}>Edit</div>
+            <div className='btn' onClick={handleDelete} id={JSON.stringify(todo.id)}>Remove</div>
+          </div>
+        ))}
+        </div>
     </div>
-    <div className="card flex-shrink-0 w-full max-w-sm shadow-2xl bg-base-100">
-      <div className="card-body">
-        <div className="form-control">
-          <label className="label">
-            <span className="label-text">Username</span>
-          </label>
-          <input type="text" placeholder="username" className="input input-bordered" />
-        </div>
-        <div className="form-control">      
-          <label className="label">
-            <span className="label-text">Password</span>
-          </label>
-          <input type="password" placeholder="password" className="input input-bordered" />
-          <label className="label">
-            <a href="#" className="label-text-alt link link-hover">Forgot password?</a>
-          </label>
-        </div>
-        <div className="form-control mt-6">
-          <button className="btn btn-primary">Login</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-<dialog id="my_modal_3" className="modal">
-  <form method="dialog" className="modal-box">
-    <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-    <h3 className="font-bold text-lg">Hello!</h3>
-    <p className="py-4">Press ESC key or click on ✕ button to close</p>
-  </form>
-</dialog>
-{/* You can open the modal using ID.showModal() method */}
-<button className="btn" onClick={()=>window.my_modal_3.showModal()}>Create new user</button>
-    </main>
   )
 }
 
+export default page
 
