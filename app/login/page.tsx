@@ -1,14 +1,32 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createUser, updateUser, deleteUser, login } from '@/app/lib/api'
+
+
+// You can use the `useClient` hook to access the client from any component like so:
+// import { useClient } from '@/app/lib/client'
+//
+
+//Note: this is a hack to make the modal work
+//TODO: find a better way to do this
+//Not working currently
+declare global {
+  interface window {
+   my_modal_3: any
+  }
+}
 
 export default function Home() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
 
- if (document.cookie.includes('userToken')) {
-    document.location.href = 'http://localhost:3000/' 
- }
+  useEffect(() => {
+    console.log(document.cookie)
+    if (document.cookie.includes('userToken')) {
+      document.location.href = 'http://localhost:3000/' 
+    }
+  }, [])
+
   async function handleLogin() {
     const user = {username:username, password:password}
 

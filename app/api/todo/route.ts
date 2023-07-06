@@ -5,6 +5,7 @@ import { authUser } from '@/app/lib/auth'
 import { redirect } from 'next/navigation'
 
 export async function GET(request: NextRequest) {
+  
   const res = await authUser(request)
 
   if (!res.ok) {
@@ -63,6 +64,7 @@ export async function DELETE(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+
   const res = await authUser(request)
 
   if (!res.ok) {

@@ -1,6 +1,7 @@
 'use client'
 import React from 'react'
 import { useEffect, useState } from 'react'
+import { logout } from '@/app/lib/api'
 
 interface Todo {
   id: number,
@@ -38,7 +39,7 @@ function page() {
         if (!response.ok) {
           //redirect to login page
           console.log('REDIRECT TO LOGIN')
-          document.location.href = 'http://localhost:3000/login'
+          //document.location.href = 'http://localhost:3000/login'
           return
         }
 
@@ -66,7 +67,7 @@ function page() {
       })
       setTodos(todos.filter(todo => todo.id != id))
     }
-
+    
     async function handleCheck(e:any) {
       const taskId = e.target.id
       const response = fetch('/api/todo/', {
@@ -87,12 +88,19 @@ function page() {
       setTodos(updatedTodos);
     }
 
+    async function handleLogout() {
+      const response = await logout()
+      document.location.href = 'http://localhost:3000/login'
+    }
+
   return (
-    <div className='flex flex-col p-2'>
-      <h1>Todo List</h1>
-      <input type='text' value={content} onChange={handleChange} className='w-96'></input>
-      <button onClick={createTodo}>Create</button>
-      <input type='checkbox'/>
+    <div className='flex flex-col p-6'>
+      <h1 className='menu-title'>Todo List</h1>
+      <div onClick={handleLogout} className='btn btn-secondary'>LOG OUT</div>
+      <div className=''>
+      <input type='text' value={content} placeholder="Type here" onChange={handleChange} className='input input-bordered w-full max-w-xs'></input>
+      <div onClick={createTodo} className='btn btn-primary'>Create</div>
+      </div>
     
       <div className='p-2'>
         {todos.map((todo: Todo) => (
