@@ -9,9 +9,8 @@ import { createUser, updateUser, deleteUser, login } from '@/app/lib/api'
 
 //Note: this is a hack to make the modal work
 //TODO: find a better way to do this
-//Not working currently
 declare global {
-  interface window {
+  interface Window {
    my_modal_3: any
   }
 }

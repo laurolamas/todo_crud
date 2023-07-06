@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 
 export async function authUser(request: NextRequest) {
   const userToken = request.cookies.get('userToken')
+  console.log(`userToken.value= "${userToken?.value}"`)
   if (!userToken || userToken.value === '') {
     // Add redirect to login page
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })

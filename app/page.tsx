@@ -39,7 +39,7 @@ function page() {
         if (!response.ok) {
           //redirect to login page
           console.log('REDIRECT TO LOGIN')
-          document.location.href = 'http://localhost:3000/login'
+          //document.location.href = 'http://localhost:3000/login'
           return
         }
 
