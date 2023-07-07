@@ -35,14 +35,6 @@ function page() {
       async function fetchData() {
 
         const response = await fetch('/api/todo')
-
-        if (!response.ok) {
-          //redirect to login page
-          console.log('REDIRECT TO LOGIN')
-          //document.location.href = 'http://localhost:3000/login'
-          return
-        }
-
         const todos = await response.json()
         setTodos(todos)
         

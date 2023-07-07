@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import { serialize } from 'cookie'
 import { NextResponse } from 'next/server'
 
+// Login route that creates token
 export async function POST(request: Request) {
   const { username, password } = await request.json()
   const dbUser = await prisma.user.findUnique({
@@ -31,4 +32,12 @@ export async function POST(request: Request) {
   res.cookies.set('userToken', serializedToken)
 
   return res
+}
+
+// Logout route that deletes token
+export async function DELETE(request: Request, response: NextResponse) {
+  return response.cookies.set('userToken', '', {
+    maxAge: 0,
+    path: '/',
+  })
 }

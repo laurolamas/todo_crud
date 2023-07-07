@@ -1,8 +1,6 @@
 import prisma from '@/prisma/prisma'
-import jwt from 'jsonwebtoken'
 import { NextRequest, NextResponse } from 'next/server'
 import { authUser } from '@/app/lib/auth'
-import { redirect } from 'next/navigation'
 
 export async function GET(request: NextRequest) {
   const res = await authUser(request)

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createUser, updateUser, deleteUser, login } from '@/app/lib/api'
+import { redirect } from 'next/navigation'
 
 
 // You can use the `useClient` hook to access the client from any component like so:
@@ -21,19 +22,12 @@ export default function Home() {
 
   useEffect(() => {
     console.log(document.cookie)
-    if (document.cookie.includes('userToken')) {
-      document.location.href = 'http://localhost:3000/' 
-    }
   }, [])
 
   async function handleLogin() {
     const user = {username:username, password:password}
 
     const response = await login(user)
-
-    if (response.ok) {
-      document.location.href = 'http://localhost:3000/'
-    }
 
     setUsername('')
     setPassword('')

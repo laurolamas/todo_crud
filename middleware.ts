@@ -2,33 +2,82 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import jwt from 'jsonwebtoken'
 
-// This function can be marked `async` if using `await` inside
-export async function middleware(request: NextRequest) {
+function verifyCookie(request: NextRequest) {
   const userToken = request.cookies.get('userToken')
   if (!userToken || userToken.value === '') {
-    // Redirect to login page
-    if (request.nextUrl.pathname.startsWith('/api/')) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
-    } else {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-  } else {
-    if (request.nextUrl.pathname.startsWith('/login')) {
-      return NextResponse.redirect(new URL('/', request.url))
-    }
+    return false
   }
-
-  const userTokenValue = userToken.value.split('=')[1]
+  /* const userTokenValue = userToken.value.split('=')[1]
   const decoded: any = jwt.verify(
     userTokenValue,
     JSON.stringify(process.env.JWT_SECRET)
   )
-  const user = decoded.data.dbUser
+  // Chequear que token es valido
+  const user = decoded.data.dbUser */
+  return true
+}
+
+function handleLogin(request: NextRequest) {
+  if (verifyCookie(request)) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
+  return NextResponse.next()
+}
+
+function handleHome(request: NextRequest) {
+  if (!verifyCookie(request)) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+  return NextResponse.next()
+}
+
+function handlePrivateApi(request: NextRequest) {
+  if (!verifyCookie(request)) {
+    return NextResponse.json({ error: 'Not authorized' }, { status: 401 })
+  }
+  return NextResponse.next()
+}
+
+function handlePublicApi(request: NextRequest) {
+  return NextResponse.next()
+}
+
+const publicRoutes = ['/api/auth', '/api/user/create']
+
+// This function can be marked `async` if using `await` inside
+export async function middleware(request: NextRequest) {
+  const path = request.nextUrl.pathname
+  console.log('middleware for route:', path)
+  if (path === '/login') {
+    console.log('login')
+    return handleLogin(request)
+  }
+  if (path === '/') {
+    console.log('/home')
+    return handleHome(request)
+  }
+  if (path === '/api/user/create' || path === '/api/auth') {
+    console.log('api public')
+    return handlePublicApi(request)
+  }
+  if (path.startsWith('/api/todo') || path.startsWith('/api/user')) {
+    console.log('api private')
+    return handlePrivateApi(request)
+  }
+  console.log('other')
   return NextResponse.next()
 }
 
 // See "Matching Paths" below to learn more
 export const config = {
   // matcher: '/about/:path*',
-  matcher: '/',
+  matcher: [
+    '/',
+    '/api/:path',
+    '/login',
+    '/api/auth',
+    '/api/user/create',
+    '/api/todo/:path*',
+    '/api/user/:path*',
+  ],
 }
