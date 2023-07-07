@@ -52,10 +52,6 @@ function page() {
 
     }, [])
 
-    useEffect(() => {
-      console.log(todos)
-    }, [todos])
-
     function handleEdit() {
       return
     }
