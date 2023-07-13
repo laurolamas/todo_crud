@@ -1,70 +1,78 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import jwt from 'jsonwebtoken'
+import * as jose from 'jose'
 
-function verifyCookie(request: NextRequest) {
+interface User {
+  id: number
+  username: string
+  password: string
+}
+
+async function authUser(request: NextRequest) {
   const userToken = request.cookies.get('userToken')
   if (!userToken || userToken.value === '') {
     return false
   }
-  /* const userTokenValue = userToken.value.split('=')[1]
-  const decoded: any = jwt.verify(
-    userTokenValue,
-    JSON.stringify(process.env.JWT_SECRET)
+
+  const userTokenValue = userToken.value
+  const secret = jose.base64url.decode(
+    'zH4NRP1HMALxxCFnRZABFA7GOJtzUa43lauro67891a'
   )
-  // Chequear que token es valido
-  const user = decoded.data.dbUser */
-  return true
-}
-
-function handleLogin(request: NextRequest) {
-  if (verifyCookie(request)) {
-    return NextResponse.redirect(new URL('/', request.url))
+  try {
+    const { protectedHeader, payload } = await jose.jwtDecrypt(
+      userTokenValue,
+      secret,
+      {
+        issuer: 'urn:example:issuer',
+        audience: 'urn:example:audience',
+      }
+    )
+    return payload.dbUser as User
+  } catch (err) {
+    console.log(err)
+    return false
   }
-  return NextResponse.next()
 }
 
-function handleHome(request: NextRequest) {
-  if (!verifyCookie(request)) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-  return NextResponse.next()
+function addIdHeader(request: Request, id: string) {
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('userId', id)
+  // You can also set request headers in NextResponse.rewrite
+  const response = NextResponse.next({
+    request: {
+      // New request headers
+      headers: requestHeaders,
+    },
+  })
+  return response
 }
-
-function handlePrivateApi(request: NextRequest) {
-  if (!verifyCookie(request)) {
-    return NextResponse.json({ error: 'Not authorized' }, { status: 401 })
-  }
-  return NextResponse.next()
-}
-
-function handlePublicApi(request: NextRequest) {
-  return NextResponse.next()
-}
-
-const publicRoutes = ['/api/auth', '/api/user/create']
 
 // This function can be marked `async` if using `await` inside
 export async function middleware(request: NextRequest) {
+  // Getting the user from the token or flase if not logged in
+  const user = await authUser(request)
   const path = request.nextUrl.pathname
-  console.log('middleware for route:', path)
   if (path === '/login') {
-    console.log('login')
-    return handleLogin(request)
+    if (user !== false) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+    return NextResponse.next()
   }
   if (path === '/') {
-    console.log('/home')
-    return handleHome(request)
+    if (user === false) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.next()
   }
   if (path === '/api/user/create' || path === '/api/auth') {
-    console.log('api public')
-    return handlePublicApi(request)
+    return NextResponse.next()
   }
   if (path.startsWith('/api/todo') || path.startsWith('/api/user')) {
-    console.log('api private')
-    return handlePrivateApi(request)
+    if (user === false) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 401 })
+    }
+    return addIdHeader(request, user.id.toString())
   }
-  console.log('other')
   return NextResponse.next()
 }
 

@@ -1,10 +1,16 @@
-export interface User {
+interface User {
   username: string
   password: string
 }
 
+export async function getUser() {
+  const response = await fetch('/api/user')
+  const resp = await response.json()
+  return resp
+}
+
 export async function createUser(user: User) {
-  const response = await fetch('/api/user', {
+  const response = await fetch('/api/user/create', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -43,7 +49,7 @@ export async function updateUser(user: User) {
 }
 
 export async function login(user: User) {
-  const response = await fetch('/api/login', {
+  const response = await fetch('/api/auth', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -55,8 +61,8 @@ export async function login(user: User) {
 }
 
 export async function logout() {
-  const response = await fetch('/api/logout', {
-    method: 'POST',
+  const response = await fetch('/api/auth', {
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json',

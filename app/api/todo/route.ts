@@ -1,19 +1,14 @@
 import prisma from '@/prisma/prisma'
 import { NextRequest, NextResponse } from 'next/server'
-import { authUser } from '@/app/lib/auth'
 
 export async function GET(request: NextRequest) {
-  const res = await authUser(request)
-
-  if (!res.ok) {
-    return res
-  }
-
-  const user = await res.json()
+  // Read user id from header called 'id'
+  const userHeader = request.headers.get('userId')
+  const userId = userHeader ? userHeader : '0'
 
   const todos = await prisma.todo.findMany({
     where: {
-      userId: user.id,
+      userId: parseInt(userId),
     },
   })
 
@@ -21,18 +16,14 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const res = await authUser(request)
-
-  if (!res.ok) {
-    return res
-  }
-  const user = await res.json()
+  const userHeader = request.headers.get('userId')
+  const userId = userHeader ? userHeader : '0'
   const { content } = await request.json()
 
   const newTodo = await prisma.todo.create({
     data: {
       content: content,
-      userId: user.id,
+      userId: parseInt(userId),
     },
   })
   return NextResponse.json(newTodo)
@@ -44,32 +35,19 @@ export async function DELETE(request: NextRequest) {
 
     const taskId = searchParams.get('id')
 
-    if (!taskId) {
-      return NextResponse.error()
-    }
-
     const deletedTask = await prisma.todo.delete({
       where: {
-        id: parseInt(taskId),
+        id: taskId ? parseInt(taskId) : -1,
       },
     })
     return NextResponse.json(deletedTask)
   } catch (error) {
-    console.error('Error deleting user:', error)
-    return NextResponse.error()
+    return NextResponse.json({ error: 'Task not found' }, { status: 404 })
   }
 }
 
 export async function PUT(request: NextRequest) {
-  const res = await authUser(request)
-
-  if (!res.ok) {
-    return res
-  }
-
   const data = await request.json()
-
-  console.log(data)
 
   const updateTodo = await prisma.todo.update({
     where: {
@@ -77,6 +55,7 @@ export async function PUT(request: NextRequest) {
     },
     data: {
       done: data.done,
+      content: data.content ? data.content : '',
     },
   })
 

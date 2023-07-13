@@ -2,8 +2,17 @@ import prisma from '@/prisma/prisma'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
-  const users = await prisma.user.findMany()
-  return NextResponse.json(users)
+  const userHeader = request.headers.get('userId')
+  const userId = userHeader ? userHeader : '0'
+  const user = await prisma.user.findUnique({
+    where: {
+      id: parseInt(userId),
+    },
+  })
+  const copyUser = { ...user }
+  // Delete password field from user object
+  delete copyUser.password
+  return NextResponse.json(copyUser)
 }
 
 export async function DELETE(request: NextRequest) {
@@ -32,6 +41,15 @@ export async function PUT(request: NextRequest) {
   const data = await request.text()
 
   const body = JSON.parse(data)
+  const userHeader = request.headers.get('userId')
+  const userId = userHeader ? userHeader : '0'
+
+  if (parseInt(userId) !== body.id) {
+    return NextResponse.json(
+      { error: 'You can only update your own user' },
+      { status: 401 }
+    )
+  }
 
   const updateUser = await prisma.user.update({
     where: {

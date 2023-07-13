@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { createUser, updateUser, deleteUser, login } from '@/app/lib/api'
+import { createUser, updateUser, deleteUser, login } from '@/app/lib/userApi'
 import { redirect } from 'next/navigation'
 
 
@@ -16,27 +16,31 @@ declare global {
   }
 }
 
-export default function Home() {
+export default function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-
-  useEffect(() => {
-    console.log(document.cookie)
-  }, [])
+  const [isLoading, setIsLoading] = useState(false)
+  const spinnerClasses = 'inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]'
 
   async function handleLogin() {
+    if (username === '' || password === '') return
+    setIsLoading(true)
     const user = {username:username, password:password}
 
     const response = await login(user)
+    if (response.ok) {
+      document.location.href = '/'
+    } else {
+      setUsername('')
+      setPassword('')
+      alert('Wrong username or password')
+      setIsLoading(false)
+    }
 
-    setUsername('')
-    setPassword('')
-
-    console.log(response)
   }
 
   return (
-    <main className="">
+    <main className="animate-load-element">
         <div className="hero min-h-screen bg-base-200">
   <div className="hero-content flex-col lg:flex-row-reverse">
     <div className="text-center lg:text-left">
@@ -61,7 +65,7 @@ export default function Home() {
           </label>
         </div>
         <div className="form-control mt-6">
-          <button onClick={handleLogin} className="btn btn-primary">Login</button>
+          <button onClick={handleLogin} className="btn btn-primary">{isLoading ? (<div className={spinnerClasses}></div>) : 'Log in'}</button>
         </div>
       </div>
     </div>

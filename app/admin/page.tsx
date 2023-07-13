@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { createUser, updateUser, deleteUser } from '../lib/api'
+import { createUser, updateUser, deleteUser } from '@/app/lib/userApi'
 
 export default function Home() {
   const [username, setUsername] = useState('')
